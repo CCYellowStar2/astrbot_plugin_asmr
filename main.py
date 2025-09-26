@@ -56,25 +56,26 @@ class AsmrPlugin(Star):
     async def fetch_with_retry(self, url_path: str, params=None, max_retries=4):
         """带重试机制的API请求"""
         errors = []
-        for attempt in range(max_retries):
-            current_api = self.get_current_api()
-            url = f"{current_api}{url_path}"
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url, params=params, headers=headers, timeout=10) as response:
+        async with aiohttp.ClientSession(headers=headers) as session: # 在循环外创建会SH会话
+            for attempt in range(max_retries):
+                current_api = self.get_current_api()
+                url = f"{current_api}{url_path}"
+                try:
+                    # 复用 session
+                    async with session.get(url, params=params, timeout=10) as response:
                         if response.status == 200:
                             return await response.json()
                         else:
                             errors.append(f"API {current_api} 返回状态码: {response.status}")
                             await self.rotate_api()
-            except Exception as e:
-                errors.append(f"API {current_api} 请求失败: {str(e)}")
-                await self.rotate_api()
+                except Exception as e:
+                    errors.append(f"API {current_api} 请求失败: {str(e)}")
+                    await self.rotate_api()
         
-        # 所有API尝试都失败
         error_msg = "所有API请求均失败:\n" + "\n".join(errors)
         logger.error(error_msg)
         return None
+
     
     @filter.command("搜音声")
     async def search_asmr(self, event: AstrMessageEvent):
@@ -187,7 +188,7 @@ class AsmrPlugin(Star):
 
         for sub in substrings:
             if sub in args[0]:
-                rid = args[0][2:]
+                rid = args[0].replace(sub, "")
                 break
         
         try:
