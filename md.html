@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Markdown 渲染器</title>
+  
+  <!-- 样式资源 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww" crossorigin="anonymous">
+  <link rel="stylesheet" href="/path/to/styles/default.min.css">
+  
+  <!-- 脚本资源 -->
+  <script src="/path/to/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script>
+  <script 
+    defer 
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js" 
+    integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" 
+    crossorigin="anonymous"
+    onload="renderMathInElement(document.getElementById('md-content'),{delimiters: [{left: '$$', right: '$$', display: true},{left: '$', right: '$', display: false}]});">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    /* 基础样式 */
+    body {
+      word-break: break-word;
+      line-height: 1.75;
+      font-weight: 400;
+      color: #333;
+      background-color: #fff;
+      padding: 20px;
+      max-width: 1200px;
+      min-width: 200px;
+      margin: 0 auto;
+      font-size: 32px;
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+    }
+
+    /* 标题样式 */
+    h1, h2, h3, h4, h5, h6 {
+      margin: 1.5em 0 0.8em;
+      line-height: 1.2;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    h1 { font-size: 2em; border-bottom: 2px solid #eee; padding-bottom: 0.3em; }
+    h2 { font-size: 1.8em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    h3 { font-size: 1.6em; }
+    h4 { font-size: 1.4em; }
+    h5 { font-size: 1.2em; }
+    h6 { font-size: 1em; color: #777; }
+    
+    /* 段落和文本 */
+    p { margin: 0 0 1em; }
+    
+    strong { font-weight: 600; color: #2c3e50; }
+    
+    em { font-style: italic; }
+    
+    /* 列表 */
+    ul, ol {
+      margin: 0 0 1em 2em;
+      padding-left: 1em;
+    }
+    
+    li { margin-bottom: 0.5em; }
+    
+    ul li { list-style-type: disc; }
+    
+    ol li { list-style-type: decimal; }
+    
+    /* 链接 */
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    
+    a:hover { text-decoration: underline; }
+    
+    /* 代码块和内联代码 */
+    pre {
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      padding: 15px;
+      overflow: auto;
+      margin: 1em 0;
+      line-height: 1.45;
+    }
+    
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      background-color: #f8f9fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+    
+    pre code {
+      padding: 0;
+      background: transparent;
+    }
+    
+    /* 引用 */
+    blockquote {
+      border-left: 4px solid #3498db;
+      padding: 0.5em 1em;
+      margin: 1em 0;
+      background-color: #f8f9fa;
+      color: #555;
+    }
+    
+    blockquote p { margin: 0; }
+    
+    /* 表格 */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    
+    th { background-color: #f8f9fa; font-weight: 600; }
+    
+    tr:nth-child(even) { background-color: #f8f9fa; }
+    
+    /* 分隔线 */
+    hr {
+      height: 1px;
+      border: none;
+      background-color: #eee;
+      margin: 1.5em 0;
+    }
+    
+    /* 图片 */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 1em auto;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Markdown渲染区域 -->
+  <article id="md-content"></article>
+
+  <script>
+    const markdownText = `{{ text }}`;
+    
+    // 配置并渲染Markdown
+    marked.setOptions({ breaks: true, gfm: true });
+    document.getElementById('md-content').innerHTML = marked.parse(markdownText);
+  </script>
+</body>
+</html>
