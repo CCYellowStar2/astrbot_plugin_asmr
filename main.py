@@ -201,76 +201,21 @@ class AsmrPlugin(Star):
         yield event.plain_result(f"正在查询音声信息！")
         
         try:
-            
                 # 获取音声信息
                 r = await self.fetch_with_retry(f"/api/workInfo/{rid}")
                 
                 if r is None or "title" not in r:
                     yield event.plain_result("没有此音声信息或还没有资源")
                     return
-                
-                name = r["title"]
-                ar = r["name"]
-                img = r["mainCoverUrl"]
-                
-                # 获取音轨信息
-                result = await self.fetch_with_retry(f"/api/tracks/{rid}")
-                
-                if result is None:
-                    yield event.plain_result("获取音轨信息失败")
+                if selected_index:
+                    msg1,url,state=await self.get_asmr(event=event,rid=rid,r=r,selected_index=selected_index)
+                else:
+                    msg1,url,state=await self.get_asmr(event=event,rid=rid,r=r)
+                if state == None:
                     return
-                
-                keywords, urls = [], []
-                
-                async def process_item(item):
-                    if item["type"] == "audio":
-                        keywords.append(item["title"])
-                        urls.append(item["mediaDownloadUrl"])
-                    elif item["type"] == "folder":
-                        for child in item["children"]:
-                            await process_item(child)
-                
-                for result2 in result:
-                    await process_item(result2)
-                
-                if not keywords:
-                    yield event.plain_result("此音声没有可播放的音轨")
-                    return
-                
-                # 如果提供了索引，直接播放
-                if selected_index is not None:
-                    await self._play_track(event, selected_index, keywords, urls, name, ar, img, rid)
-                    return
-                
-                # 否则显示选择界面
-                msg = f'### <div align="center">选择编号</div>\n' \
-                      f'|<img width="250" src="{img}"/> |{name}  社团名：{ar}|\n' \
-                      '| :---: | --- |\n'
-                
-                for i in range(len(keywords)):
-                    msg += f'|{str(i+1)}. | {keywords[i]}|\n'
-                
-                msg1 = "请发送序号来获取要听的资源"
-                    
-                template_data = {
-                    "text": msg
-                }
-                with open(self.template_path, 'r', encoding='utf-8') as f:
-                    meme_help_tmpl = f.read()
-                url = await self.html_render(meme_help_tmpl, template_data)
                 yield event.image_result(url)
                 yield event.plain_result(msg1)
                 
-                # 等待用户选择
-                state = {
-                    "keywords": keywords,
-                    "urls": urls,
-                    "ar": ar,
-                    "url": f"https://asmr.one/work/RJ{rid}",
-                    "iurl": img,
-                    "name": name,
-                    "rid": rid
-                }
                 id = event.get_sender_id()
                 @session_waiter(timeout=self.timeout, record_history_chains=False)
                 async def track_waiter(controller: SessionController, ev: AstrMessageEvent):
@@ -298,7 +243,117 @@ class AsmrPlugin(Star):
             logger.error(f"播放音声失败: {str(e)}")
             yield event.plain_result("播放音声失败，请稍后再试")
 
-    
+    @filter.command("随机音声")
+    async def play_Random_asmr(self, event: AstrMessageEvent):
+        """播放随机音声"""        
+        yield event.plain_result(f"正在随机抽取音声！")
+        
+        try:
+                # 获取音声信息
+                r = (await self.fetch_with_retry(f"/api/works?order=betterRandom"))["works"][0]
+                
+                if r is None or "title" not in r:
+                    yield event.plain_result("没有此音声信息或还没有资源")
+                    return
+                rid = str(r["id"])
+                if len(rid) == 7 or len(rid) == 5:
+                    rid = "0" + rid
+                yield event.plain_result("抽取成功！RJ号："+rid)
+                msg1,url,state=await self.get_asmr(event=event,rid=rid,r=r)
+                if state == None:
+                    return
+                yield event.image_result(url)
+                yield event.plain_result(msg1)
+                
+                id = event.get_sender_id()
+                @session_waiter(timeout=self.timeout, record_history_chains=False)
+                async def track_waiter(controller: SessionController, ev: AstrMessageEvent):
+                    if ev.get_sender_id() != id:
+                        return
+                    reply = ev.message_str.strip()
+                    if not reply.isdigit():
+                        await event.send(event.plain_result("请发送正确的数字~"))
+                        return
+                    
+                    index = int(reply) - 1
+                    if index < 0 or index >= len(state["keywords"]):
+                        await event.send(event.plain_result("序号超出范围，请重新输入"))
+                        return
+                    
+                    await self._play_track(ev, index, state["keywords"], state["urls"], 
+                                          state["name"], state["ar"], state["iurl"], state["rid"])
+                    controller.stop()
+                
+                try:
+                    await track_waiter(event)
+                except TimeoutError:
+                    yield event.plain_result("选择超时！")
+        except Exception as e:
+            logger.error(f"播放音声失败: {str(e)}")
+            yield event.plain_result("播放音声失败，请稍后再试")
+
+    async def get_asmr(self, event: AstrMessageEvent, rid: str, r, selected_index: int = 0):        
+        name = r["title"]
+        ar = r["name"]
+        img = r["mainCoverUrl"]
+        
+        # 获取音轨信息
+        result = await self.fetch_with_retry(f"/api/tracks/{rid}")
+        
+        if result is None:
+            await event.send(event.plain_result("获取音轨信息失败"))
+            return None,None,None
+        
+        keywords, urls = [], []
+        
+        async def process_item(item):
+            if item["type"] == "audio":
+                keywords.append(item["title"])
+                urls.append(item["mediaDownloadUrl"])
+            elif item["type"] == "folder":
+                for child in item["children"]:
+                    await process_item(child)
+        
+        for result2 in result:
+            await process_item(result2)
+        
+        if not keywords:
+            await event.send(event.plain_result("此音声没有可播放的音轨"))
+            return None,None,None
+        
+        # 如果提供了索引，直接播放
+        if selected_index and selected_index != 0:
+            await self._play_track(event, selected_index, keywords, urls, name, ar, img, rid)
+            return None,None,None
+        
+        # 否则显示选择界面
+        msg = f'### <div align="center">选择编号</div>\n' \
+            f'|<img width="250" src="{img}"/> |{name}  社团名：{ar}|\n' \
+            '| :---: | --- |\n'
+        
+        for i in range(len(keywords)):
+            msg += f'|{str(i+1)}. | {keywords[i]}|\n'
+        
+        msg1 = "请发送序号来获取要听的资源"
+            
+        template_data = {
+            "text": msg
+        }
+        with open(self.template_path, 'r', encoding='utf-8') as f:
+            meme_help_tmpl = f.read()
+        url = await self.html_render(meme_help_tmpl, template_data)
+
+        state = {
+            "keywords": keywords,
+            "urls": urls,
+            "ar": ar,
+            "url": f"https://asmr.one/work/RJ{rid}",
+            "iurl": img,
+            "name": name,
+            "rid": rid
+        }
+        return msg1,url,state
+
     async def _play_track(self, event: AstrMessageEvent, index: int, keywords: list, 
                          urls: list, name: str, ar: str, img: str, rid: str):
         """播放指定音轨"""
