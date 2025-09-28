@@ -12,6 +12,8 @@
 
 使用【 /听音声 <输入RJ号和序号(可选) 比如 '/听音声 114514 1'> 】来获取收听音乐卡片
 
+使用【 /随机音声 】来随机获取收听音乐卡片
+
 ## 📌示例
 <img width="813" height="670" alt="image" src="https://github.com/user-attachments/assets/643c28c6-1fa6-4167-ad56-2af9576c02de" />
 
