@@ -21,6 +21,9 @@
 
 <img width="834" height="501" alt="image" src="https://github.com/user-attachments/assets/e8ffa4f2-8e20-46fd-92f2-5ebb0a72c9c1" />
 
+<img width="703" height="1195" alt="image" src="https://github.com/user-attachments/assets/a14509d0-05ce-4ad6-995d-d6adeb644231" />
+
+
 ## 更新日志  
 
 ```V1.0``` 插件发布  
