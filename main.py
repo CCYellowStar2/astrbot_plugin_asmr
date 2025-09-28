@@ -43,6 +43,7 @@ class AsmrPlugin(Star):
         self.current_api_index = 0  # 当前使用的API索引
         self.plugin_dir = Path(__file__).parent
         self.template_path = self.plugin_dir / "md.html"
+        self.nsfw = config.get("enable_nsfw", True)
 
     async def rotate_api(self):
         """切换到下一个API端点"""
@@ -102,7 +103,8 @@ class AsmrPlugin(Star):
             return
 
         yield event.plain_result(f"正在搜索音声{keyword}，第{y}页！")
-
+        if not self.nsfw:
+            keyword = keyword + "%20%24-age%3Aadult%24"
         try:
             r = await self.fetch_with_retry(
                 f"/api/search/{keyword}",
@@ -207,6 +209,9 @@ class AsmrPlugin(Star):
                 if r is None or "title" not in r:
                     yield event.plain_result("没有此音声信息或还没有资源")
                     return
+                if not self.nsfw and r["nsfw"]==True:
+                    yield event.plain_result("此音声为r18音声，管理员已禁止")
+                    return
                 if selected_index:
                     msg1,url,state=await self.get_asmr(event=event,rid=rid,r=r,selected_index=selected_index)
                 else:
@@ -254,6 +259,9 @@ class AsmrPlugin(Star):
                 
                 if r is None or "title" not in r:
                     yield event.plain_result("没有此音声信息或还没有资源")
+                    return
+                if not self.nsfw:
+                    yield event.plain_result("管理员已开启禁止nsfw，此功能已禁止")
                     return
                 rid = str(r["id"])
                 if len(rid) == 7 or len(rid) == 5:
