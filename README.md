@@ -1,4 +1,4 @@
-# astrbot_plugin_touchga
+# astrbot_plugin_asmr
 
 ## ✨ 简介
 一个[Astrbot](https://github.com/Soulter/AstrBot)插件，可以提供asmr音声的搜索和播放（接入asmr.one的api），已内置aiocqhttp端的音乐卡片签名
